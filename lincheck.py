@@ -8,7 +8,10 @@ Created on Thu Aug 24 12:09:26 2023
 """
 
 # imports
+import numpy as np
+import pandas as pd
 import os, sys
+from astropy.io import fits
 
 
 # Global Variables
@@ -52,4 +55,17 @@ for path, subdirs, files in os.walk(pathImages):
     for name in files:
         fullList.append(os.path.abspath(path)+'/'+name)
 
-            
+# Initiating results structure.        
+resname = ['exptime','medianCounts','avgCounts']
+results = []
+        
+for fitsfile in fullList:
+    hdul = []
+    hdul = fits.open(fitsfile)
+    exptime = hdul[0].header['EXPTIME']
+    data = hdul[0].data
+    results.append([exptime,np.median(data),np.average(data)])
+
+resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime')
+
+print('This is the end... TumTumTum My lonely friend... the end...\n')
