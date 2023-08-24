@@ -14,6 +14,12 @@ import os, sys
 from astropy.io import fits
 
 
+# Global constants
+# CCD regions format [x,y,delta]
+regions =[[250,1100,100],[1700,1100,100],[1700,250,100],[250,250,100],[1002,668,100]]
+
+
+
 # Global Variables
 pathImages = ''
 pathTargetRegions = ''
