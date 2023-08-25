@@ -16,7 +16,9 @@ Created on Thu Aug 24 12:09:26 2023
 import numpy as np
 import pandas as pd
 import os, sys
+import matplotlib.pyplot as plt
 from astropy.io import fits
+from scipy.optimize import curve_fit
 
 
 # Global constants
@@ -29,6 +31,7 @@ regions =[[250,1100,100],[1100,1100,100],[1100,250,100],[250,250,100],[1002,668,
 pathImages = ''
 pathTargetRegions = ''
 pathResults = ''
+language = 'es'             # Options: español='es' and english='en'
 
 argtemp = []
 fullList = []
@@ -43,8 +46,22 @@ def checkRegion(region,data,exptime):
     avgCounts = np.average(regiondata)
     return [exptime,medianCounts,avgCounts]
 
-def presentPlots(results, regionsResults, pathResults):
-    pass
+def presentPlots(results, regionsResults, pathResults, totalParams, regionParams):
+    
+    # Presenting plot of the all CCD.
+    fig, ax = plt.subplots(figsize=(10,10))
+    ax.plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker='.', color='b',label='Linear Regression')
+    ax.plot(results['exptime'],results['medianCounts'], marker='x', color='k',label='Acquired data')
+    if language=='es':
+        ax.set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
+    if language=='en':
+        ax.set(xlabel='Exposure time (s)', ylabel='Counts')
+    plt.legend()
+    plt.show()
+
+def lineEquation(x,m,b):
+    return m*x+b
+
 
 
 # If there was a Main, this would be it...
@@ -81,6 +98,7 @@ for path, subdirs, files in os.walk(pathImages):
 resname = ['exptime','medianCounts','avgCounts']
 results = []
 regionsResults = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
+regionParams = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
 
 for fitsfile in fullList:
     hdul = []
@@ -93,9 +111,24 @@ for fitsfile in fullList:
     regionsResults['region3'].append(checkRegion(regions[2],data,exptime))
     regionsResults['region4'].append(checkRegion(regions[3],data,exptime))
     regionsResults['region5'].append(checkRegion(regions[4],data,exptime))
-    
+
+# storing data in Pandas DataFrames.    
 for region in regionsResults.keys():
     regionsResults[region] = pd.DataFrame(regionsResults[region],columns=resname).sort_values('exptime')
 resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime')
+
+# Fitting a curve to the data.
+params, cov = curve_fit(lineEquation,resultsDF['exptime'],resultsDF['medianCounts'])
+regionParams['region1'] = curve_fit(lineEquation,regionsResults['region1']['exptime'],regionsResults['region1']['medianCounts'])
+regionParams['region2'] = curve_fit(lineEquation,regionsResults['region2']['exptime'],regionsResults['region2']['medianCounts'])
+regionParams['region3'] = curve_fit(lineEquation,regionsResults['region3']['exptime'],regionsResults['region3']['medianCounts'])
+regionParams['region4'] = curve_fit(lineEquation,regionsResults['region4']['exptime'],regionsResults['region4']['medianCounts'])
+regionParams['region5'] = curve_fit(lineEquation,regionsResults['region5']['exptime'],regionsResults['region5']['medianCounts'])
+
+# checking for the existance of the results path.
+if not os.path.exists(pathResults):
+    os.makedirs(pathResults)
+
+presentPlots(resultsDF, regionsResults, pathResults, params, regionParams)
 
 print('This is the end... TumTumTum My lonely friend... the end...\n')
