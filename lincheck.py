@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+This script was created to check the linear response of the SBIG-11000M CCD.
+It takes a collection of images taken from a white screen, and performs the median, 
+and average of the pixel values of the all image, and then from regions of interest of the CCD.
+The results are then plotted. 
+
 Created on Thu Aug 24 12:09:26 2023
 
 @author: jmsaguas
@@ -71,6 +76,7 @@ for fitsfile in fullList:
     exptime = hdul[0].header['EXPTIME']
     data = hdul[0].data
     results.append([exptime,np.median(data),np.average(data)])
+    
 
 resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime')
 
