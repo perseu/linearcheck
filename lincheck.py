@@ -50,8 +50,8 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
     
     # Presenting plot of the all CCD.
     fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker='.', color='b',label='Linear Regression')
     ax.plot(results['exptime'],results['medianCounts'], marker='x', color='k',label='Acquired data')
+    ax.plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker='.', color='b',label='Linear Regression')
     if language=='es':
         ax.set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
     if language=='en':
@@ -62,6 +62,8 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
     if language=='en':
         plt.title('Relation between Exposure time and Median Count')
     plt.show()
+    
+    # Presenting the individual regions.
 
 def lineEquation(x,m,b):
     return m*x+b
