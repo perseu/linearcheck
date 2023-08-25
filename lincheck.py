@@ -21,7 +21,7 @@ from astropy.io import fits
 
 # Global constants
 # CCD regions format [x,y,delta]
-regions =[[250,1100,100],[1700,1100,100],[1700,250,100],[250,250,100],[1002,668,100]]
+regions =[[250,1100,100],[1100,1100,100],[1100,250,100],[250,250,100],[1002,668,100]]
 
 
 
@@ -34,6 +34,17 @@ argtemp = []
 fullList = []
 
 # Functions
+def checkRegion(region,data,exptime):
+    row=region[0]
+    col=region[1]
+    delta=region[2]
+    regiondata = data[row-delta:row+delta,col-delta:col+delta]
+    medianCounts = np.median(regiondata)
+    avgCounts = np.average(regiondata)
+    return [exptime,medianCounts,avgCounts]
+
+def presentPlots(results, regionsResults, pathResults):
+    pass
 
 
 # If there was a Main, this would be it...
@@ -69,15 +80,22 @@ for path, subdirs, files in os.walk(pathImages):
 # Initiating results structure.        
 resname = ['exptime','medianCounts','avgCounts']
 results = []
-        
+regionsResults = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
+
 for fitsfile in fullList:
     hdul = []
     hdul = fits.open(fitsfile)
     exptime = hdul[0].header['EXPTIME']
     data = hdul[0].data
     results.append([exptime,np.median(data),np.average(data)])
+    regionsResults['region1'].append(checkRegion(regions[0],data,exptime))
+    regionsResults['region2'].append(checkRegion(regions[1],data,exptime))
+    regionsResults['region3'].append(checkRegion(regions[2],data,exptime))
+    regionsResults['region4'].append(checkRegion(regions[3],data,exptime))
+    regionsResults['region5'].append(checkRegion(regions[4],data,exptime))
     
-
+for region in regionsResults.keys():
+    regionsResults[region] = pd.DataFrame(regionsResults[region],columns=resname).sort_values('exptime')
 resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime')
 
 print('This is the end... TumTumTum My lonely friend... the end...\n')
