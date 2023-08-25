@@ -57,6 +57,10 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
     if language=='en':
         ax.set(xlabel='Exposure time (s)', ylabel='Counts')
     plt.legend()
+    if language=='es':
+        plt.title('Relación entre el tiempo de exposición y el recuento mediano')
+    if language=='en':
+        plt.title('Relation between Exposure time and Median Count')
     plt.show()
 
 def lineEquation(x,m,b):
