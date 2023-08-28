@@ -44,27 +44,43 @@ def checkRegion(region,data,exptime):
     regiondata = data[row-delta:row+delta,col-delta:col+delta]
     medianCounts = np.median(regiondata)
     avgCounts = np.average(regiondata)
-    return [exptime,medianCounts,avgCounts]
+    stdev = np.std(regiondata)
+    return [exptime,medianCounts,avgCounts,stdev]
 
-def presentPlots(results, regionsResults, pathResults, totalParams, regionParams):
-    
+def presentPlots(results, regionsResults, pathResults, totalParams, regionParams):    
     # Presenting plot of the all CCD.
-    fig, ax = plt.subplots(figsize=(10,10))
-    ax.plot(results['exptime'],results['medianCounts'], marker='x', color='k',label='Acquired data')
-    ax.plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker='.', color='b',label='Linear Regression')
+    fig = plt.figure(figsize=(10,10))
+    gs = fig.add_gridspec(2, hspace=0, height_ratios=[0.8,0.2])
+    ax = gs.subplots(sharex=True, sharey=False)
+    
+    ax[0].errorbar(results['exptime'],results['medianCounts'], results['sigma'], fmt=' ', capsize=3.0, marker='x', color='k',label='Acquired data')
+    ax[0].plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker=' ', color='b',label='Linear Regression')
     if language=='es':
-        ax.set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
+        ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
     if language=='en':
-        ax.set(xlabel='Exposure time (s)', ylabel='Counts')
+        ax[0].set(xlabel='Exposure time (s)', ylabel='Counts')
+    ax[1].scatter(results['exptime'],results['residuals'],color='k')
+    reslim=0
+    if np.abs(np.max(results['residuals'])) > reslim:
+        reslim = np.abs(np.max(results['residuals']))
+    if np.abs(np.min(results['residuals'])) > reslim:
+        reslim = np.abs(np.min(results['residuals']))
+    ax[1].set_ylim((-reslim*1.1,reslim*1.1))
+    if language =='en':
+        ax[1].set(xlabel='Exposure time (s)', ylabel='residuals')
+    if language =='es':
+        ax[1].set(xlabel='Tiempo de exposición (s)', ylabel='residual')
+    ax[1].axhline(y=0, color='k')
     plt.legend()
     if language=='es':
-        plt.title('Relación entre el tiempo de exposición y el recuento mediano')
+        fig.suptitle('Relación entre el tiempo de exposición y el recuento mediano',fontsize=15, fontweight='bold')
     if language=='en':
-        plt.title('Relation between Exposure time and Median Count')
+        fig.suptitle('Relation between Exposure time and Median Count',fontsize=15, fontweight='bold')
     plt.show()
     
     # Presenting the individual regions.
-
+    
+    
 def lineEquation(x,m,b):
     return m*x+b
 
@@ -101,7 +117,7 @@ for path, subdirs, files in os.walk(pathImages):
         fullList.append(os.path.abspath(path)+'/'+name)
 
 # Initiating results structure.        
-resname = ['exptime','medianCounts','avgCounts']
+resname = ['exptime','medianCounts','avgCounts','sigma']
 results = []
 regionsResults = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
 regionParams = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
@@ -111,7 +127,7 @@ for fitsfile in fullList:
     hdul = fits.open(fitsfile)
     exptime = hdul[0].header['EXPTIME']
     data = hdul[0].data
-    results.append([exptime,np.median(data),np.average(data)])
+    results.append([exptime,np.median(data),np.average(data),np.std(data)])
     regionsResults['region1'].append(checkRegion(regions[0],data,exptime))
     regionsResults['region2'].append(checkRegion(regions[1],data,exptime))
     regionsResults['region3'].append(checkRegion(regions[2],data,exptime))
@@ -120,8 +136,11 @@ for fitsfile in fullList:
 
 # storing data in Pandas DataFrames.    
 for region in regionsResults.keys():
-    regionsResults[region] = pd.DataFrame(regionsResults[region],columns=resname).sort_values('exptime')
-resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime')
+    regionsResults[region] = pd.DataFrame(regionsResults[region],columns=resname).sort_values('exptime',).reset_index(drop=True)
+    regionsResults[region]['residuals']=0
+
+resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime').reset_index(drop=True)
+# resultsDF['residuals']=0
 
 # Fitting a curve to the data.
 params, cov = curve_fit(lineEquation,resultsDF['exptime'],resultsDF['medianCounts'])
@@ -130,6 +149,19 @@ regionParams['region2'] = curve_fit(lineEquation,regionsResults['region2']['expt
 regionParams['region3'] = curve_fit(lineEquation,regionsResults['region3']['exptime'],regionsResults['region3']['medianCounts'])
 regionParams['region4'] = curve_fit(lineEquation,regionsResults['region4']['exptime'],regionsResults['region4']['medianCounts'])
 regionParams['region5'] = curve_fit(lineEquation,regionsResults['region5']['exptime'],regionsResults['region5']['medianCounts'])
+
+# Calculating residuals for the entire CCD.
+tempaccum=[]
+for ii in range(len(resultsDF['exptime'])):
+    tempaccum.append(resultsDF['medianCounts'][ii]-(lineEquation(resultsDF['exptime'][ii],params[0],params[1])))
+resultsDF['residuals']=tempaccum
+
+# Calculating the residuals for the independent regions.
+for region in regionParams.keys():
+    tempaccum = []
+    for ii in range(len(regionsResults[region]['residuals'])):
+        tempaccum.append(regionsResults[region]['medianCounts'][ii]-(lineEquation(regionsResults[region]['exptime'][ii],regionParams[region][0][0],regionParams[region][0][1])))
+    regionsResults[region]['residuals']=tempaccum
 
 # checking for the existance of the results path.
 if not os.path.exists(pathResults):
