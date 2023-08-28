@@ -71,16 +71,59 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
     if language =='es':
         ax[1].set(xlabel='Tiempo de exposición (s)', ylabel='residual')
     ax[1].axhline(y=0, color='k')
-    plt.legend()
+    ax[0].legend()
     if language=='es':
-        fig.suptitle('Relación entre el tiempo de exposición y el recuento mediano',fontsize=15, fontweight='bold')
+        fig.suptitle('Relación entre el tiempo de exposición y el recuento mediano para todo el CCD',fontsize=15, fontweight='bold')
     if language=='en':
-        fig.suptitle('Relation between Exposure time and Median Count',fontsize=15, fontweight='bold')
+        fig.suptitle('Relation between Exposure time and Median Count for the all CCD',fontsize=15, fontweight='bold')
     plt.show()
     
+    if pathResults[-1] != '/':
+        pathResults=pathResults+'/'
+    if language == 'es':
+        totalFilePath = pathResults+'Total-exposicion-cuentas.png'
+    if language == 'en':
+        totalFilePath = pathResults+'Total-exposure-counts.png'
+    fig.savefig(totalFilePath)
+    
     # Presenting the individual regions.
-    
-    
+    for region in regionsResults.keys():
+        fig = plt.figure(figsize=(10,10))
+        gs = fig.add_gridspec(2, hspace=0, height_ratios=[0.8,0.2])
+        ax = gs.subplots(sharex=True, sharey=False)
+        
+        ax[0].errorbar(regionsResults[region]['exptime'], regionsResults[region]['medianCounts'], regionsResults[region]['sigma'], fmt=' ', capsize=3.0, marker='x', color='k',label='Acquired data')
+        ax[0].plot(regionsResults[region]['exptime'],lineEquation(regionsResults[region]['exptime'], regionParams[region][0][0], regionParams[region][0][1]), marker=' ', color='b',label='Linear Regression')
+        if language=='es':
+            ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
+        if language=='en':
+            ax[0].set(xlabel='Exposure time (s)', ylabel='Counts')
+        ax[1].scatter(regionsResults[region]['exptime'],regionsResults[region]['residuals'],color='k')
+        reslim=0
+        if np.abs(np.max(regionsResults[region]['residuals'])) > reslim:
+            reslim = np.abs(np.max(regionsResults[region]['residuals']))
+        if np.abs(np.min(regionsResults[region]['residuals'])) > reslim:
+            reslim = np.abs(np.min(regionsResults[region]['residuals']))
+        ax[1].set_ylim((-reslim*1.1,reslim*1.1))
+        if language =='en':
+            ax[1].set(xlabel='Exposure time (s)', ylabel='residuals')
+        if language =='es':
+            ax[1].set(xlabel='Tiempo de exposición (s)', ylabel='residual')
+        ax[1].axhline(y=0, color='k')
+        ax[0].legend()
+        if language=='es':
+            fig.suptitle('Relación entre el tiempo de exposición y el recuento mediano para '+region,fontsize=15, fontweight='bold')
+        if language=='en':
+            fig.suptitle('Relation between Exposure time and Median Count for '+region,fontsize=15, fontweight='bold')
+        plt.show()
+        
+        if language == 'es':
+            totalFilePath = pathResults+'-'+region+'-exposicion-cuentas.png'
+        if language == 'en':
+            totalFilePath = pathResults+'-'+region+'-exposure-counts.png'
+        fig.savefig(totalFilePath)
+        
+        
 def lineEquation(x,m,b):
     return m*x+b
 
@@ -143,12 +186,12 @@ resultsDF = pd.DataFrame(results,columns=resname).sort_values('exptime').reset_i
 # resultsDF['residuals']=0
 
 # Fitting a curve to the data.
-params, cov = curve_fit(lineEquation,resultsDF['exptime'],resultsDF['medianCounts'])
-regionParams['region1'] = curve_fit(lineEquation,regionsResults['region1']['exptime'],regionsResults['region1']['medianCounts'])
-regionParams['region2'] = curve_fit(lineEquation,regionsResults['region2']['exptime'],regionsResults['region2']['medianCounts'])
-regionParams['region3'] = curve_fit(lineEquation,regionsResults['region3']['exptime'],regionsResults['region3']['medianCounts'])
-regionParams['region4'] = curve_fit(lineEquation,regionsResults['region4']['exptime'],regionsResults['region4']['medianCounts'])
-regionParams['region5'] = curve_fit(lineEquation,regionsResults['region5']['exptime'],regionsResults['region5']['medianCounts'])
+params, cov = curve_fit(lineEquation,resultsDF['exptime'],resultsDF['medianCounts'],sigma=resultsDF['sigma'])
+regionParams['region1'] = curve_fit(lineEquation,regionsResults['region1']['exptime'],regionsResults['region1']['medianCounts'],sigma=regionsResults['region1']['sigma'])
+regionParams['region2'] = curve_fit(lineEquation,regionsResults['region2']['exptime'],regionsResults['region2']['medianCounts'],sigma=regionsResults['region1']['sigma'])
+regionParams['region3'] = curve_fit(lineEquation,regionsResults['region3']['exptime'],regionsResults['region3']['medianCounts'],sigma=regionsResults['region1']['sigma'])
+regionParams['region4'] = curve_fit(lineEquation,regionsResults['region4']['exptime'],regionsResults['region4']['medianCounts'],sigma=regionsResults['region1']['sigma'])
+regionParams['region5'] = curve_fit(lineEquation,regionsResults['region5']['exptime'],regionsResults['region5']['medianCounts'],sigma=regionsResults['region1']['sigma'])
 
 # Calculating residuals for the entire CCD.
 tempaccum=[]
