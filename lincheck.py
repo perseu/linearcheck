@@ -135,13 +135,14 @@ args = sys.argv
 # Checking if the user supplied what we need to work.
 if len(args) == 1:
     print('This script need parameters...\nSyntax: '+args[0].split('/')[-1]+' i=ImagesPath t=pathToTargetsCSVFile r=pathToResults\n')
+    sys.exit(0)
 else:
     if len(args) > 4:
         print('Too many parameters!!!\nATTENTION!!!\nSyntax: '+args[0].split('/')[-1]+' i=ImagesPath t=pathToTargetsCSVFile r=pathToResults\n')
-        exit()
+        sys.exit(0)
     if len(args) < 4:
         print('Too few parameters!!!\nATTENTION!!!\nSyntax: '+args[0].split('/')[-1]+' i=ImagesPath t=pathToTargetsCSVFile r=pathToResults\n')
-        exit()
+        sys.exit(0)
     if len(args) == 4:
         for ii in range(len(args)):
             argtemp = args[ii].split('=')
