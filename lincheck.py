@@ -23,7 +23,7 @@ from scipy.optimize import curve_fit
 
 # Global constants
 # CCD regions format [x,y,delta]
-regions =[[250,1100,100],[1100,1100,100],[1100,250,100],[250,250,100],[1002,668,100]]
+regions =[[250,250,100],[250,1750,100],[1100,250,100],[1100,1750,100],[668,1002,100]]
 
 
 
