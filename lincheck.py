@@ -200,17 +200,31 @@ for ii in range(len(resultsDF['exptime'])):
     tempaccum.append(resultsDF['medianCounts'][ii]-(lineEquation(resultsDF['exptime'][ii],params[0],params[1])))
 resultsDF['residuals']=tempaccum
 
+# Present the statistics of the residuals for the all CCD.
+print('\n\nFor the entire sensor:')
+print('Minimum counts= '+str(int(np.min(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.min(resultsDF['residuals'])]['exptime'].values[0])+' s')
+print('Maximum counts= '+str(int(np.max(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.max(resultsDF['residuals'])]['exptime'].values[0])+' s')
+print('Median count= '+str(int(np.median(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.median(resultsDF['residuals'])]['exptime'].values[0])+' s')
+
+
 # Calculating the residuals for the independent regions.
 for region in regionParams.keys():
     tempaccum = []
     for ii in range(len(regionsResults[region]['residuals'])):
         tempaccum.append(regionsResults[region]['medianCounts'][ii]-(lineEquation(regionsResults[region]['exptime'][ii],regionParams[region][0][0],regionParams[region][0][1])))
     regionsResults[region]['residuals']=tempaccum
+    
+    # Presents the statistics of the residuals for the independent regions.
+    print('\n\nFor region '+region+': ')
+    print('Minimum counts= '+str(int(np.min(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.min(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
+    print('Maximum counts= '+str(int(np.max(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.max(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
+    print('Median count= '+str(int(np.median(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.median(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
 
+    
 # checking for the existance of the results path.
 if not os.path.exists(pathResults):
     os.makedirs(pathResults)
 
 presentPlots(resultsDF, regionsResults, pathResults, params, regionParams)
 
-print('This is the end... TumTumTum My lonely friend... the end...\n')
+print('\n\n\nThis is the end... TumTumTum My only friend... the end... [The Doors]\n')
