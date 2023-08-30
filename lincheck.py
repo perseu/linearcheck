@@ -56,9 +56,9 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
     ax[0].errorbar(results['exptime'],results['medianCounts'], results['sigma'], fmt=' ', capsize=3.0, marker='x', color='k',label='Acquired data')
     ax[0].plot(results['exptime'],lineEquation(results['exptime'], totalParams[0], totalParams[1]), marker=' ', color='b',label='Linear Regression')
     if language=='es':
-        ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
+        ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas/pixel')
     if language=='en':
-        ax[0].set(xlabel='Exposure time (s)', ylabel='Counts')
+        ax[0].set(xlabel='Exposure time (s)', ylabel='Counts/pixel')
     ax[1].scatter(results['exptime'],results['residuals'],color='k')
     reslim=0
     if np.abs(np.max(results['residuals'])) > reslim:
@@ -95,9 +95,9 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
         ax[0].errorbar(regionsResults[region]['exptime'], regionsResults[region]['medianCounts'], regionsResults[region]['sigma'], fmt=' ', capsize=3.0, marker='x', color='k',label='Acquired data')
         ax[0].plot(regionsResults[region]['exptime'],lineEquation(regionsResults[region]['exptime'], regionParams[region][0][0], regionParams[region][0][1]), marker=' ', color='b',label='Linear Regression')
         if language=='es':
-            ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas')
+            ax[0].set(xlabel='Tiempo de exposición (s)', ylabel='Cuentas/pixel')
         if language=='en':
-            ax[0].set(xlabel='Exposure time (s)', ylabel='Counts')
+            ax[0].set(xlabel='Exposure time (s)', ylabel='Counts/pixel')
         ax[1].scatter(regionsResults[region]['exptime'],regionsResults[region]['residuals'],color='k')
         reslim=0
         if np.abs(np.max(regionsResults[region]['residuals'])) > reslim:
