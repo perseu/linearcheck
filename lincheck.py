@@ -127,8 +127,23 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
 def lineEquation(x,m,b):
     return m*x+b
 
-def detCoef(data):
-    pass
+
+
+def detCoef(Yobs, Yesp):
+    
+    SQRAccum = []
+    SQTAccum = []
+    
+    avgYObs = np.average(Yobs)
+    
+    for ii in range(len(Yobs)):
+        SQRAccum.append(np.power((Yobs[ii]-Yesp[ii]),2))
+        SQTAccum.append(np.power((Yobs[ii]-avgYObs),2))
+        
+    SQRes=np.sum(np.array(SQRAccum))
+    SQTot=np.sum(np.array(SQTAccum))
+    detC = 1 - (SQRes/SQTot)
+    return detC
 
 
 
@@ -169,6 +184,7 @@ results = []
 regionsResults = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
 regionParams = {'region1':[],'region2':[],'region3':[],'region4':[],'region5':[]}
 
+
 for fitsfile in fullList:
     hdul = []
     hdul = fits.open(fitsfile)
@@ -205,14 +221,14 @@ for ii in range(len(resultsDF['exptime'])):
     eCountAccum.append(lineEquation(resultsDF['exptime'][ii],params[0],params[1]))
 resultsDF['expectedCounts']=eCountAccum
 resultsDF['residuals']=tempaccum
-
+R2Total = detCoef(resultsDF['medianCounts'].values, resultsDF['expectedCounts'].values)
 
 # Present the statistics of the residuals for the all CCD.
 print('\n\nFor the entire sensor:')
 print('Minimum counts= '+str(int(np.min(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.min(resultsDF['residuals'])]['exptime'].values[0])+' s')
 print('Maximum counts= '+str(int(np.max(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.max(resultsDF['residuals'])]['exptime'].values[0])+' s')
 print('Median count= '+str(int(np.median(resultsDF['residuals'])))+' at '+str(resultsDF[resultsDF['residuals']==np.median(resultsDF['residuals'])]['exptime'].values[0])+' s')
-
+print('R^2= '+str(R2Total))
 
 # Calculating the residuals for the independent regions.
 for region in regionParams.keys():
@@ -223,13 +239,14 @@ for region in regionParams.keys():
         eCountAccum.append(lineEquation(regionsResults[region]['exptime'][ii],regionParams[region][0][0],regionParams[region][0][1]))
     regionsResults[region]['expectedCounts']=eCountAccum
     regionsResults[region]['residuals']=tempaccum
+    R2Total=detCoef(regionsResults[region]['medianCounts'].values, regionsResults[region]['expectedCounts'].values)
     
     # Presents the statistics of the residuals for the independent regions.
     print('\n\nFor region '+region+': ')
     print('Minimum counts= '+str(int(np.min(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.min(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
     print('Maximum counts= '+str(int(np.max(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.max(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
     print('Median count= '+str(int(np.median(regionsResults[region]['residuals'])))+' at '+str(regionsResults[region][regionsResults[region]['residuals']==np.median(regionsResults[region]['residuals'])]['exptime'].values[0])+' s')
-
+    print('R^2= '+str(R2Total))
     
 # checking for the existance of the results path.
 if not os.path.exists(pathResults):
