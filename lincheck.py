@@ -127,6 +127,9 @@ def presentPlots(results, regionsResults, pathResults, totalParams, regionParams
 def lineEquation(x,m,b):
     return m*x+b
 
+def detCoef(data):
+    pass
+
 
 
 # If there was a Main, this would be it...
@@ -196,9 +199,13 @@ regionParams['region5'] = curve_fit(lineEquation,regionsResults['region5']['expt
 
 # Calculating residuals for the entire CCD.
 tempaccum=[]
+eCountAccum = []
 for ii in range(len(resultsDF['exptime'])):
     tempaccum.append(resultsDF['medianCounts'][ii]-(lineEquation(resultsDF['exptime'][ii],params[0],params[1])))
+    eCountAccum.append(lineEquation(resultsDF['exptime'][ii],params[0],params[1]))
+resultsDF['expectedCounts']=eCountAccum
 resultsDF['residuals']=tempaccum
+
 
 # Present the statistics of the residuals for the all CCD.
 print('\n\nFor the entire sensor:')
@@ -210,8 +217,11 @@ print('Median count= '+str(int(np.median(resultsDF['residuals'])))+' at '+str(re
 # Calculating the residuals for the independent regions.
 for region in regionParams.keys():
     tempaccum = []
+    eCountAccum = []
     for ii in range(len(regionsResults[region]['residuals'])):
         tempaccum.append(regionsResults[region]['medianCounts'][ii]-(lineEquation(regionsResults[region]['exptime'][ii],regionParams[region][0][0],regionParams[region][0][1])))
+        eCountAccum.append(lineEquation(regionsResults[region]['exptime'][ii],regionParams[region][0][0],regionParams[region][0][1]))
+    regionsResults[region]['expectedCounts']=eCountAccum
     regionsResults[region]['residuals']=tempaccum
     
     # Presents the statistics of the residuals for the independent regions.
